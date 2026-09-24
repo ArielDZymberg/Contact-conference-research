@@ -1,5 +1,37 @@
 # Pesquisa de Contatos para Conferências
 
+## Forma recomendada: Skill do Claude (sem custo extra)
+
+A pasta `skill/` tem a Skill **pesquisa-contatos-conferencia**. Ela roda dentro do claude.ai (no
+navegador ou no app do celular) e usa o seu plano do Claude, sem cobrança por pesquisa. O que ela
+faz:
+- pesquisa pessoas e fundos/empresas: nome digitado, agenda em PDF/Excel ou foto de crachá/cartão;
+- monta o briefing: resumo, estratégia, AUM com data e fonte, outros dados financeiros e o que não
+  foi encontrado;
+- gera o PDF do briefing;
+- atualiza a base `base_contatos.xlsx` com a data da conversa e a conferência.
+
+**Instalação (cada pessoa, uma vez):**
+1. Baixe `skill/pesquisa-contatos-conferencia.zip`.
+2. No claude.ai, abra **Configurações → Capacidades**. Ative **Criação e edição de arquivos /
+   execução de código** e **Busca na web**.
+3. Na mesma tela, em **Skills**, clique em **Enviar skill** e selecione o `.zip`.
+
+**Uso:** abra uma conversa nova e escreva, por exemplo:
+- `Pesquisa Maria Silva - XYZ Capital`
+- `Pesquisa e adiciona na base: João Souza - ABC Asset, conversei hoje na Conferência X` (anexe a
+  `base_contatos.xlsx` mais recente, se já tiver uma)
+- anexe a agenda ou a foto de um crachá e peça `pesquisa essas pessoas`
+
+A pasta `exemplo/` tem um PDF gerado por uma pesquisa real.
+
+As pesquisas consomem o limite de uso do plano, como qualquer conversa com o Claude. Numa agenda
+grande, pesquise em lotes.
+
+---
+
+## Alternativa: app web local (usa a API da Anthropic, cobrada à parte)
+
 Aplicação web que roda no seu computador e prepara briefings sobre as pessoas que você vai
 encontrar em conferências, e sobre os fundos/empresas delas. Também mantém uma base em Excel
 com as pessoas com quem você já conversou.
