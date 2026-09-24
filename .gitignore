@@ -1,0 +1,7 @@
+.env
+.venv/
+venv/
+__pycache__/
+*.pyc
+# Base de contatos (dados pessoais) fica apenas no seu computador
+dados/

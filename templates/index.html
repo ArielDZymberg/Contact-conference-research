@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pesquisa de Contatos</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Ccircle cx=%226.5%22 cy=%226.5%22 r=%224.5%22 fill=%22none%22 stroke=%22%231f3a5f%22 stroke-width=%222%22/%3E%3Cpath d=%22M10 10l4.5 4.5%22 stroke=%22%231f3a5f%22 stroke-width=%222%22/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header>
+  <h1>Pesquisa de Contatos</h1>
+  <p>Briefings sobre as pessoas e fundos/empresas que você vai encontrar na conferência</p>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button class="tab active" data-tab="individual">Pesquisa individual</button>
+  <button class="tab" data-tab="agenda">Agenda da conferência</button>
+  <button class="tab" data-tab="base">Base de contatos</button>
+</nav>
+
+<main>
+  <!-- Pesquisa individual -->
+  <section id="tab-individual" class="panel">
+    <form id="form-individual" class="card" autocomplete="off">
+      <div class="grid">
+        <label>Nome da pessoa *
+          <input name="nome" required placeholder="Ex.: Maria Silva">
+        </label>
+        <label>Fundo / empresa
+          <input name="empresa" placeholder="Ex.: XYZ Capital">
+        </label>
+      </div>
+      <label>Contexto adicional (opcional)
+        <input name="contexto" placeholder="Ex.: cargo, cidade, painel em que vai falar">
+      </label>
+      <div class="actions">
+        <button type="submit" class="primary" data-add="0">Pesquisar</button>
+        <button type="submit" class="secondary" data-add="1">Pesquisar e adicionar pessoa na base</button>
+      </div>
+    </form>
+    <div id="results-individual"></div>
+  </section>
+
+  <!-- Agenda -->
+  <section id="tab-agenda" class="panel hidden">
+    <form id="form-agenda" class="card">
+      <label>Arquivo da agenda (PDF, Excel, CSV, Word ou texto)
+        <input type="file" name="arquivo" accept=".pdf,.xlsx,.xlsm,.csv,.txt,.md,.docx" required>
+      </label>
+      <div class="actions">
+        <button type="submit" class="primary">Ler agenda</button>
+      </div>
+    </form>
+
+    <div id="agenda-people" class="card hidden">
+      <div class="row-between">
+        <h2>Pessoas encontradas na agenda</h2>
+        <label class="inline"><input type="checkbox" id="check-all" checked> Selecionar todas</label>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>Nome</th><th>Fundo / empresa</th><th>Cargo</th><th>Sessão</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="actions">
+        <button class="primary" id="agenda-search" data-add="0">Pesquisar selecionadas</button>
+        <button class="secondary" id="agenda-search-add" data-add="1">Pesquisar e adicionar selecionadas na base</button>
+      </div>
+      <div id="agenda-progress" class="muted"></div>
+    </div>
+
+    <div id="agenda-bulk" class="actions hidden">
+      <button class="ghost" id="agenda-pdf-all">Salvar todos em PDF</button>
+      <button class="ghost" id="agenda-new">Nova pesquisa</button>
+    </div>
+    <div id="results-agenda"></div>
+  </section>
+
+  <!-- Base -->
+  <section id="tab-base" class="panel hidden">
+    <div class="card">
+      <div class="row-between">
+        <h2>Pessoas com quem já conversamos</h2>
+        <a class="button ghost" href="/api/base/download">Baixar Excel</a>
+      </div>
+      <input id="base-filter" placeholder="Filtrar por nome, empresa ou conferência">
+      <div class="table-wrap">
+        <table id="base-table">
+          <thead><tr><th>Data</th><th>Conferência</th><th>Nome</th><th>Cargo</th><th>Fundo / empresa</th><th>Estratégia</th><th>AUM</th><th>Observações</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p id="base-empty" class="muted hidden">A base ainda está vazia.</p>
+    </div>
+  </section>
+</main>
+
+<!-- Modal: dados da conversa -->
+<dialog id="modal-base">
+  <form method="dialog" id="form-base">
+    <h2>Adicionar à base</h2>
+    <p class="muted" id="modal-base-who"></p>
+    <label>Data da conversa *
+      <input type="date" name="data_conversa" required value="{{ hoje }}">
+    </label>
+    <label>Conferência *
+      <input name="conferencia" list="conferencias" required placeholder="Ex.: Latin America Investment Conference 2026">
+      <datalist id="conferencias"></datalist>
+    </label>
+    <label>Observações (opcional)
+      <textarea name="observacoes" rows="3" placeholder="Pontos da conversa, próximos passos..."></textarea>
+    </label>
+    <div class="actions">
+      <button type="submit" class="primary" value="ok">Salvar na base</button>
+      <button type="button" class="ghost" id="modal-cancel">Cancelar</button>
+    </div>
+  </form>
+</dialog>
+
+<template id="tpl-result">
+  <article class="card result">
+    <div class="result-head">
+      <div>
+        <h2 class="r-nome"></h2>
+        <p class="r-sub muted"></p>
+      </div>
+      <span class="badge r-badge hidden">Na base</span>
+    </div>
+    <div class="r-alerts"></div>
+    <div class="cols">
+      <div>
+        <h3>Pessoa</h3>
+        <p class="r-pessoa"></p>
+        <p class="small"><a class="r-linkedin" target="_blank" rel="noopener"></a></p>
+      </div>
+      <div>
+        <h3>Fundo / empresa</h3>
+        <p class="r-empresa"></p>
+        <p class="small muted r-empresa-meta"></p>
+      </div>
+    </div>
+    <div class="cols">
+      <div class="r-estrategia-box">
+        <h3>Estratégia</h3>
+        <p class="r-estrategia"></p>
+      </div>
+      <div>
+        <h3>AUM</h3>
+        <p class="r-aum big"></p>
+        <p class="small muted r-aum-meta"></p>
+      </div>
+    </div>
+    <div class="r-fin-box">
+      <h3>Outras informações financeiras</h3>
+      <ul class="r-fin"></ul>
+    </div>
+    <div class="r-nf-box">
+      <h3>Não encontrado</h3>
+      <ul class="r-nf"></ul>
+    </div>
+    <details class="r-src-box">
+      <summary>Fontes</summary>
+      <ul class="r-src small"></ul>
+    </details>
+    <div class="actions">
+      <button class="primary r-pdf">Salvar em PDF</button>
+      <button class="secondary r-add">Adicionar à base</button>
+      <button class="ghost r-new">Nova pesquisa</button>
+    </div>
+  </article>
+</template>
+
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
